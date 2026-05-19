@@ -1,0 +1,2 @@
+D:\IssueTracker\issuetracker.client\obj\Debug\issuetracker.client.esproj.CoreCompileInputs.cache
+C:\Users\Павел\Desktop\IssueTracker\issuetracker.client\obj\Debug\issuetracker.client.esproj.CoreCompileInputs.cache

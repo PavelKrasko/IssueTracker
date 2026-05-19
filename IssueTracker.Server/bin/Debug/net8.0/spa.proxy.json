@@ -1,0 +1,10 @@
+{
+"SpaProxyServer": {
+"ServerUrl": "https://localhost:55420",
+"RedirectUrl": "",
+"LaunchCommand": "npm run dev",
+"WorkingDirectory": "D:\\IssueTracker\\IssueTracker.Server\\..\\issuetracker.client",
+"MaxTimeoutInSeconds": "120",
+"KeepRunning": "false"
+}
+}

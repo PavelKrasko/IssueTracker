@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issuetracker-client
+  labels:
+    app: issuetracker-client
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: issuetracker-client
+  template:
+    metadata:
+      labels:
+        app: issuetracker-client
+    spec:
+      containers:
+        - name: client
+          image:
+          ports:
+            - containerPort: 80
