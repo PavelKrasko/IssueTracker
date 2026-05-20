@@ -1,10 +1,10 @@
-name: CI/CD pipeline 
+name: CI/CD pipeline
 on: [push]
 jobs:
     build-client:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout repository 
+            - name: Checkout repository
               uses: actions/checkout@v4
 
             - name: Login to GHCR
@@ -12,10 +12,10 @@ jobs:
 
             - name: Build Docker image
               env:
-                DOCKER_BUILDKIT: 0 
+                DOCKER_BUILDKIT: 0
               run: |
                 docker build \
-                  -f Docker/Dockerfile.client \
+                  -f issuetracker-infrastructure/Docker/Dockerfile.client \
                   -t ghcr.io/pavelkrasko/issuetracker-client:latest \
                   .
 
