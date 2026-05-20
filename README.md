@@ -1,4 +1,4 @@
-## 🏗️ Stack
+## 🏗️ Stack (Стек)
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React + HTML + CSS |
@@ -11,7 +11,7 @@
 | TLS | cert-manager + Let's Encrypt |
 | GitOps | ArgoCD |
 | Tunnel | Cloudflare Tunnel |
-## 📁 Project Structure
+## 📁 Project Structure (Структура проекта)
 
 - 📁 **Docker/**
   - `Dockerfile.client`
@@ -36,9 +36,9 @@
 
 - 📁 **ArgoCD/**
   - `Application.yaml`
-## 🛠️ Prerequisites
+## 🛠️ Prerequisites (Необходимые инструменты)
 
-Before deploying, make sure you have the following tools installed:
+Before deploying, make sure you have the following tools installed (Перед развертыванием убедитесь, что у вас установлены следующие инструменты):
 
 ### Docker
 ```bash
@@ -70,13 +70,4 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
 sudo dpkg -i cloudflared.deb
 rm cloudflared.deb
-```
-
-
-Before deploying, make sure you have the following tools installed:
-
-### Docker
-```bash
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
 ```
