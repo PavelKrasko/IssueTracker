@@ -36,3 +36,47 @@
 
 - 📁 **ArgoCD/**
   - `Application.yaml`
+## 🛠️ Prerequisites
+
+Before deploying, make sure you have the following tools installed:
+
+### Docker
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+
+### kind
+```bash
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+```
+
+### kubectl
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/kubectl
+```
+
+### Helm
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+### cloudflared
+```bash
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+sudo dpkg -i cloudflared.deb
+rm cloudflared.deb
+```
+
+
+Before deploying, make sure you have the following tools installed:
+
+### Docker
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
