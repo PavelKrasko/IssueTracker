@@ -19,19 +19,8 @@ jobs:
         run: |
           docker build \
             -f Docker/Dockerfile.client \
-            -t ghcr.io/${{ github.repository_owner,, }}/issuetracker-client:latest \
+            -t ghcr.io/pavelkrasko/issuetracker-client:latest \
             .
 
       - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository_owner,, }}/issuetracker-client:latest
-
-
-  build-server:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download repository
-        uses: actions/checkout@v4
-
-      - name: Build server
-        run: echo "Building server..."
+        run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
