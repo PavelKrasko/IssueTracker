@@ -12,27 +12,27 @@
 | GitOps | ArgoCD |
 | Tunnel | Cloudflare Tunnel |
 ## 📁 Project Structure
-issuetracker-infrastructure/
-├── Docker/
-│   ├── Dockerfile.client      
-│   ├── Dockerfile.server       
-│   ├── nginx.conf              
-│   ├── docker-compose.yml       
-│   └── .env                     
-│
-├── Helm/issuetracker/
-│   ├── Chart.yaml               
-│   ├── values.yaml              
-│   └── templates/
-│       ├── client-deployment.yaml   
-│       ├── client-service.yaml      
-│       ├── server-deployment.yaml   
-│       ├── server-service.yaml      
-│       ├── mssql.yaml               
-│       ├── mssql-service.yaml       
-│       ├── ingress.yaml             
-│       ├── secret.yaml              
-│       └── cert-issuer.yaml         
-│
-└── ArgoCD/
-    └── Application.yaml         
+
+- 📁 **Docker/**
+  - 🐳 `Dockerfile.client` — React app (nginx)
+  - 🐳 `Dockerfile.server` — ASP.NET Core API
+  - ⚙️ `nginx.conf` — Proxy /api → issuetracker-server
+  - 🐳 `docker-compose.yml` — Local development
+  - 🔒 `.env` — Local only, not committed
+
+- 📁 **Helm/issuetracker/**
+  - 📄 `Chart.yaml`
+  - ⚙️ `values.yaml`
+  - 📁 **templates/**
+    - `client-deployment.yaml`
+    - `client-service.yaml`
+    - `server-deployment.yaml`
+    - `server-service.yaml`
+    - `mssql.yaml`
+    - `mssql-service.yaml`
+    - `ingress.yaml`
+    - `secret.yaml`
+    - `cert-issuer.yaml`
+
+- 📁 **ArgoCD/**
+  - 📄 `Application.yaml`
