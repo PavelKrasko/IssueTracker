@@ -20,10 +20,13 @@ jobs:
 
       - name: Build Docker image
         run: |
+          IMAGE_TAG=$(echo "ghcr.io/${{ github.actor }}/issuetracker-client:latest" | tr '[:upper:]' '[:lower:]')
           docker build \
             -f Docker/Dockerfile.client \
-            -t ghcr.io/${{ github.actor }}/issuetracker-client:latest \
+            -t $IMAGE_TAG \
             .
 
       - name: Push Docker image
-        run: docker push ghcr.io/${{ github.actor }}/issuetracker-client:latest
+        run: |
+          IMAGE_TAG=$(echo "ghcr.io/${{ github.actor }}/issuetracker-client:latest" | tr '[:upper:]' '[:lower:]')
+          docker push $IMAGE_TAG
