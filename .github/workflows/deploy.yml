@@ -7,20 +7,25 @@ on:
 jobs:
   build-client:
     runs-on: ubuntu-latest
+    env:
+      GHCR_REGISTRY: ghcr.io
+      GHCR_OWNER: pavelkrasko
+      IMAGE_NAME: issuetracker-client
+      IMAGE_TAG: latest
 
     steps:
       - name: Download repository
         uses: actions/checkout@v4
 
       - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u pavelkrasko --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.GHCR_REGISTRY }} -u ${{ env.GHCR_OWNER }} --password-stdin
 
       - name: Build Docker image
         run: |
           docker build \
             -f Docker/Dockerfile.client \
-            -t ghcr.io/pavelkrasko/issuetracker-client:latest \
+            -t ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             .
 
       - name: Push Docker image
-        run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
+        run: docker push ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
