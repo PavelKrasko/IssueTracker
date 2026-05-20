@@ -24,3 +24,11 @@ jobs:
 
             - name: Push Docker image
               run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
+            - name: Build Docker image
+              env:
+                DOCKER_BUILDKIT: 0
+              run: |
+                docker build \
+                -f issuetracker-infrastructure/Docker/Dockerfile.server \
+                -t ghcr.io/pavelkrasko/issuetracker-server:latest \
+                .
