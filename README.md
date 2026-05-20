@@ -78,3 +78,24 @@ rm cloudflared.deb
 | kubectl | Kubernetes CLI | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
 | Helm | Kubernetes package manager | [helm.sh](https://helm.sh/docs/intro/install/) |
 | cloudflared | Cloudflare Tunnel (expose without port forwarding) | [developers.cloudflare.com](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/) |
+---
+
+## Deploy — Step by Step. (Развертывание — Шаг за шагом).
+### 1. Create kind cluster. (Создать своего рода кластер).
+
+```bash
+kind create cluster --config kind-config.yaml
+```
+
+```yaml
+# kind-config.yaml
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: kind
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+networking:
+  disableDefaultCNI: false
+```
