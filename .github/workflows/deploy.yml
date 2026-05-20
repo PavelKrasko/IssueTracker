@@ -7,9 +7,6 @@ on:
 jobs:
   build-client:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Download repository
@@ -20,13 +17,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_TAG=$(echo "ghcr.io/${{ github.actor }}/issuetracker-client:latest" | tr '[:upper:]' '[:lower:]')
           docker build \
             -f Docker/Dockerfile.client \
-            -t $IMAGE_TAG \
+            -t ghcr.io/pavelkrasko/issuetracker-client:latest \
             .
 
       - name: Push Docker image
-        run: |
-          IMAGE_TAG=$(echo "ghcr.io/${{ github.actor }}/issuetracker-client:latest" | tr '[:upper:]' '[:lower:]')
-          docker push $IMAGE_TAG
+        run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
