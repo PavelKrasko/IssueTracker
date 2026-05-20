@@ -136,3 +136,14 @@ spec:
 ```bash
 kubectl apply -f metallb-pool.yaml
 ```
+### 3. Install nginx-ingress
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+
+# Check External IP is assigned. (Проверьте, назначен ли внешний IP-адрес).
+kubectl get svc -n ingress-nginx
+```
