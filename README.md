@@ -1,4 +1,4 @@
-## 🏗️ Stack (Стек)
+## Stack. (Стек).
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React + HTML + CSS |
@@ -11,16 +11,16 @@
 | TLS | cert-manager + Let's Encrypt |
 | GitOps | ArgoCD |
 | Tunnel | Cloudflare Tunnel |
-## 📁 Project Structure (Структура проекта)
+## Project Structure. (Структура проекта).
 
-- 📁 **Docker/**
+- **Docker/**
   - `Dockerfile.client`
   - `Dockerfile.server`
   - `nginx.conf`
   - `docker-compose.yml`
   - `.env`
 
-- 📁 **Helm/issuetracker/**
+- **Helm/issuetracker/**
   - `Chart.yaml`
   - `values.yaml`
   - **templates/**
@@ -34,11 +34,11 @@
     - `secret.yaml`
     - `cert-issuer.yaml`
 
-- 📁 **ArgoCD/**
+- **ArgoCD/**
   - `Application.yaml`
-## 🛠️ Prerequisites (Необходимые инструменты)
+## Prerequisites. (Необходимые инструменты).
 
-Before deploying, make sure you have the following tools installed (Перед развертыванием убедитесь, что у вас установлены следующие инструменты):
+Before deploying, make sure you have the following tools installed. (Перед развертыванием убедитесь, что у вас установлены следующие инструменты):
 
 ### Docker
 ```bash
@@ -71,3 +71,10 @@ curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloud
 sudo dpkg -i cloudflared.deb
 rm cloudflared.deb
 ```
+| Tool | Purpose | Install |
+|------|---------|---------|
+| Docker | Container runtime | [docs.docker.com](https://docs.docker.com/get-docker/) |
+| kind | Local Kubernetes cluster | [kind.sigs.k8s.io](https://kind.sigs.k8s.io/) |
+| kubectl | Kubernetes CLI | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
+| Helm | Kubernetes package manager | [helm.sh](https://helm.sh/docs/intro/install/) |
+| cloudflared | Cloudflare Tunnel (expose without port forwarding) | [developers.cloudflare.com](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/) |
