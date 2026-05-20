@@ -14,16 +14,16 @@
 ## 📁 Project Structure
 
 - 📁 **Docker/**
-  - 🐳 `Dockerfile.client` — React app (nginx)
-  - 🐳 `Dockerfile.server` — ASP.NET Core API
-  - ⚙️ `nginx.conf` — Proxy /api → issuetracker-server
-  - 🐳 `docker-compose.yml` — Local development
-  - 🔒 `.env` — Local only, not committed
+  - `Dockerfile.client` — React app (nginx)
+  - `Dockerfile.server` — ASP.NET Core API
+  - `nginx.conf` — Proxy /api → issuetracker-server
+  - `docker-compose.yml` — Local development
+  - `.env` — Local only, not committed
 
 - 📁 **Helm/issuetracker/**
-  - 📄 `Chart.yaml`
-  - ⚙️ `values.yaml`
-  - 📁 **templates/**
+  - `Chart.yaml`
+  - `values.yaml`
+  - **templates/**
     - `client-deployment.yaml`
     - `client-service.yaml`
     - `server-deployment.yaml`
@@ -35,4 +35,4 @@
     - `cert-issuer.yaml`
 
 - 📁 **ArgoCD/**
-  - 📄 `Application.yaml`
+  - `Application.yaml`
