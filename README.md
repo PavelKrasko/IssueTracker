@@ -81,7 +81,7 @@ rm cloudflared.deb
 ---
 
 ## Deploy — Step by Step. (Развертывание — Шаг за шагом).
-### 1. Create kind cluster. (Создать своего рода кластер).
+### 1. Create kind cluster. (Создать кластер).
 
 ```bash
 kind create cluster --config kind-config.yaml
@@ -98,4 +98,41 @@ nodes:
   - role: worker
 networking:
   disableDefaultCNI: false
+```
+
+### 2. Install MetalLB
+```bash
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update
+helm install metallb metallb/metallb -n metallb-system --create-namespace
+# Wait for pods to be ready. (Подождите, пока pod's будут готовы).
+kubectl wait --namespace metallb-system \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/name=metallb \
+  --timeout=90s
+```
+
+```yaml
+# metallb-pool.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 172.18.0.200-172.18.0.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - default-pool
+```
+
+```bash
+kubectl apply -f metallb-pool.yaml
 ```
