@@ -214,3 +214,19 @@ helm upgrade issuetracker ./Helm/issuetracker \
 helm uninstall issuetracker -n default
 kubectl delete pvc mssql-data-mssql-0 -n default
 ```
+## Install ArgoCD. (Установка ArgoCD).
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+
+# Скопирой от сюда пароль Login: admin
+kubectl -n argocd port-forward svc/argocd-server 8080:443
+# Открой порты
+
+```
+```bash
+kubectl apply -f ArgoCD/Application.yaml
+sudo kubectl get all -A
+```
