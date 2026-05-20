@@ -14,11 +14,11 @@
 ## 📁 Project Structure
 
 - 📁 **Docker/**
-  - `Dockerfile.client` — React app (nginx)
-  - `Dockerfile.server` — ASP.NET Core API
-  - `nginx.conf` — Proxy /api → issuetracker-server
-  - `docker-compose.yml` — Local development
-  - `.env` — Local only, not committed
+  - `Dockerfile.client`
+  - `Dockerfile.server`
+  - `nginx.conf`
+  - `docker-compose.yml`
+  - `.env`
 
 - 📁 **Helm/issuetracker/**
   - `Chart.yaml`
