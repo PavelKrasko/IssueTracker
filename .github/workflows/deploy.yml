@@ -19,8 +19,8 @@ jobs:
         run: |
           docker build \
             -f Docker/Dockerfile.client \
-            -t ghcr.io/pavelkrasko/issuetracker-client:latest \
+            -t ghcr.io/${{ github.actor }}/issuetracker-client:latest \
             .
 
       - name: Push Docker image
-        run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
+        run: docker push ghcr.io/${{ github.actor }}/issuetracker-client:latest
