@@ -100,7 +100,7 @@ networking:
   disableDefaultCNI: false
 ```
 
-### 2. Install MetalLB
+### 2. Install MetalLB. (Установить MetalLB).
 ```bash
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update
@@ -136,7 +136,7 @@ spec:
 ```bash
 kubectl apply -f metallb-pool.yaml
 ```
-### 3. Install nginx-ingress
+### 3. Install nginx-ingress. (Установить nginx-ingress).
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -146,4 +146,71 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 
 # Check External IP is assigned. (Проверьте, назначен ли внешний IP-адрес).
 kubectl get svc -n ingress-nginx
+```
+### 4. Install cert-manager. (Установить cert-manager).
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --set crds.enabled=true
+
+# Check pods
+kubectl get pods -n cert-manager
+```
+### 5. Install IssueTracker. (Установить IssueTracker).
+
+```bash
+helm install issuetracker ./Helm/issuetracker \
+  --namespace default \
+  --set sqlserver.saPassword="YOUR_STRONG_PASSWORD"
+
+# Check all pods are running
+kubectl get pods -n default
+```
+### 6. Expose via Cloudflare Tunnel. (Доступ через туннель Cloudflare).
+No port forwarding on router required:
+
+```bash
+# Get ingress External IP
+kubectl get svc -n ingress-nginx
+
+# Start tunnel
+cloudflared tunnel --url http://<EXTERNAL_IP>
+```
+
+Cloudflare will give you a public URL like `https://random-name.trycloudflare.com`.
+
+---
+## Local Development. (Локальное развертывание).
+
+```bash
+cd Docker
+cp .env.example .env   # set SA_PASSWORD
+docker compose up
+```
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:8080 |
+| MSSQL | localhost:1433 |
+
+---
+---
+
+## Upgrade. (Обновление).
+
+```bash
+helm upgrade issuetracker ./Helm/issuetracker \
+  --namespace default \
+  --set sqlserver.saPassword="YOUR_STRONG_PASSWORD"
+```
+
+## Uninstall. (Удаление).
+
+```bash
+helm uninstall issuetracker -n default
+kubectl delete pvc mssql-data-mssql-0 -n default
 ```
