@@ -1,16 +1,39 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🏗️ Stack
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React + HTML + CSS |
+| Backend | ASP.NET Core |
+| Database | Microsoft SQL Server |
+| Containerization | Docker |
+| Orchestration | Kubernetes (kind) |
+| Package Manager | Helm |
+| Ingress | nginx-ingress + MetalLB |
+| TLS | cert-manager + Let's Encrypt |
+| GitOps | ArgoCD |
+| Tunnel | Cloudflare Tunnel |
+## Структура проекта
+issuetracker-devops/
+├── docker/
+│   ├── Dockerfile.server "+" Is used
+│   ├── Dockerfile.client "+" Is used
+│   └── nginx.conf "+" Is used          
+├── helm/issuetracker/       
+│   ├── Chart.yaml "+" Is used
+│   ├── values.yaml "+" Is used          
+│   └── templates/
+│       └── cert-issuer.yaml "-" Not used
+│       └── client-deployment.yaml "+" Is used
+│       └── client-service.yaml "+" Is used
+│       └── server-deployment.yaml "+" Is used
+│       └── server-service.yaml "+" Is used
+│       └── mssql-deployment.yaml "+" Is used
+│       └── mssql-service.yaml "+" Is used
+│       └── ingress.yaml "+" Is used
+│       └── secret.yaml "+" Is used
+├── argocd/
+│   └── Application.yaml "+" Is used
+├── monitoring/
+│   ├── prometheus-values.yaml
+│   └── loki-values.yaml
+└── .github/workflows/
+    └── deploy.yml

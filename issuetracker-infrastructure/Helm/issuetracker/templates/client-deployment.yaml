@@ -14,8 +14,11 @@ spec:
       labels:
         app: issuetracker-client
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: client
-          image:
+          image: {{ .Values.image.registry }}/{{ .Values.image.client.name }}:{{ .Values.image.client.tag }}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
