@@ -1,6 +1,8 @@
 using IssueTracker.Server.Domain;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using System;
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -15,7 +17,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -30,8 +34,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseRouting();
+app.UseHttpMetrics();
 app.UseAuthorization();
 app.MapControllers();
 app.UseStaticFiles();
+app.MapMetrics();
 
 app.Run();

@@ -228,5 +228,63 @@ kubectl -n argocd port-forward svc/argocd-server 8080:443
 ```
 ```bash
 kubectl apply -f ArgoCD/Application.yaml
-sudo kubectl get all -A
+  sudo kubectl get all -A
 ```
+
+## Server Preparation. (Подготовка сервера).
+```bash
+cd /мnt/d/IssueTracker/IssueTracker.Server
+dotnet add package prometheus-net.AspNetCore
+```
+#В Program.cs добавь using Prometheus
+```bash
+app.UseRouting();
+app.UseHttpMetrics();
+app.MapMetrics();
+```
+#Пересобери образ:
+```bash
+cd /mnt/d/IssueTracker
+cp -r ~/.nuget/packages ./nuget-cache
+docker build --no-cache -f issuetracker-infrastructure/Docker/Dockerfile.server -t issuetracker-server:latest .
+docker tag issuetracker-server:latest ghcr.io/<username>/server:<новый-тег>
+docker push ghcr.io/<username>/server:<новый-тег>
+```
+#Обнови тег в values.yaml:
+```bash
+/mnt/d/IssueTracker/issuetracker-infrastructure/Helm/issuetracker/values.yaml
+```
+#Примени:
+```bash
+cd /mnt/d/IssueTracker
+helm upgrade issuetracker ./issuetracker-infrastructure/Helm/issuetracker -n default
+```
+# Installing Prometheus + Grafana (Установка Prometheus + Grafana)
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+  -n monitoring --create-namespace \
+  -f /mnt/d/IssueTracker/issuetracker-infrastructure/Monitoring/kube‑prometheus‑stack.yaml
+```
+#Если ImagePullBackOff:
+```bash
+sudo docker pull --platform linux/amd64 <образ>
+sudo docker save <образ> | sudo docker exec -i kind-worker ctr --namespace=k8s.io images import -
+sudo docker save <образ> | sudo docker exec -i kind-worker2 ctr --namespace=k8s.io images import -
+sudo docker save <образ> | sudo docker exec -i kind-control-plane ctr --namespace=k8s.io images import -
+```
+#Применение ServiceMonitor
+```bash
+kubectl apply -f /mnt/d/IssueTracker/issuetracker-infrastructure/Monitoring/ServiceMonitor.yaml
+```
+#Открытие интерфейсов (каждый в отдельном терминале)
+```bash
+kubectl --namespace monitoring port-forward svc/prometheus-grafana 3000:80
+kubectl --namespace monitoring port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
+kubectl port-forward svc/issuetracker-server 8080:8080 -n default
+```
+
+#Grafana: http://localhost:3000 (admin / admin123)
+#Prometheus: http://localhost:9090 → Status → Targets
+#Метрики: http://localhost:8080/metrics

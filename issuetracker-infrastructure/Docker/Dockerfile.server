@@ -1,10 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY IssueTracker.Server/ ./IssueTracker.Server/
-RUN dotnet restore ./IssueTracker.Server/IssueTracker.Server.csproj
-COPY IssueTracker.Server/ ./IssueTracker.Server/
+COPY nuget-cache/ /root/.nuget/packages/
+RUN dotnet restore ./IssueTracker.Server/IssueTracker.Server.csproj --source /root/.nuget/packages
 RUN dotnet publish ./IssueTracker.Server/IssueTracker.Server.csproj \
-    -c Release -o /app/publish
+    -c Release -o /app/publish --no-restore
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
