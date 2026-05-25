@@ -1,0 +1,197 @@
+{
+  "title": "IssueTracker Server",
+  "uid": "issuetracker-server-v2",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Requests Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "rate(http_requests_received_total{job=\"issuetracker-server\"}[1m])",
+          "legendFormat": "{{method}} {{path}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "HTTP Request Latency",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"issuetracker-server\"}[1m]))",
+          "legendFormat": "p99", "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"issuetracker-server\"}[1m]))",
+          "legendFormat": "p95", "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"issuetracker-server\"}[1m]))",
+          "legendFormat": "p50", "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 3,
+      "title": "4xx Errors Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "rate(http_requests_received_total{job=\"issuetracker-server\", code=~\"4..\"}[1m])",
+          "legendFormat": "{{code}} {{path}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "fixedColor": "orange", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 4,
+      "title": "5xx Errors Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "rate(http_requests_received_total{job=\"issuetracker-server\", code=~\"5..\"}[1m])",
+          "legendFormat": "{{code}} {{path}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "fixedColor": "red", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Process CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "rate(process_cpu_seconds_total{job=\"issuetracker-server\"}[1m])",
+          "legendFormat": "CPU", "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "color": { "fixedColor": "blue", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Process Memory",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "process_working_set_bytes{job=\"issuetracker-server\"}",
+          "legendFormat": "Working Set", "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "dotnet_total_memory_bytes{job=\"issuetracker-server\"}",
+          "legendFormat": "GC Heap", "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Requests In Progress",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 24, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "http_requests_in_progress{job=\"issuetracker-server\"}",
+          "legendFormat": "In Progress", "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 8,
+      "title": "Total Requests",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 24, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "sum(http_requests_received_total{job=\"issuetracker-server\"})",
+          "legendFormat": "Total", "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 9,
+      "title": "Process Threads",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 24, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "process_num_threads{job=\"issuetracker-server\"}",
+          "legendFormat": "Threads", "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 10,
+      "title": "GC Collections",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 24, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "afn3rayvm2cxsd" },
+          "expr": "rate(dotnet_collection_count_total{job=\"issuetracker-server\"}[1m])",
+          "legendFormat": "Gen {{generation}}", "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 11,
+      "title": "Server Logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 10 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "efn3rktklihvkd" },
+          "expr": "{namespace=\"default\", app=\"issuetracker-server\"}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending"
+      }
+    }
+  ]
+}
