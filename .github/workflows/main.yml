@@ -9,22 +9,21 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
-
             - name: Login to GHCR
               run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u pavelkrasko --password-stdin
-
             - name: Build Docker image
               env:
                 DOCKER_BUILDKIT: 0
               run: |
                 docker build \
-                  -f issuetracker-infrastructure/Docker/Dockerfile.client \
+                  -f infra/docker/Dockerfile.client \
                   -t ghcr.io/pavelkrasko/issuetracker-client:latest \
+                  -t ghcr.io/pavelkrasko/issuetracker-client:${{ github.sha }} \
                   .
-
             - name: Push Docker image
-              run: docker push ghcr.io/pavelkrasko/issuetracker-client:latest
-
+              run: |
+                docker push ghcr.io/pavelkrasko/issuetracker-client:latest
+                docker push ghcr.io/pavelkrasko/issuetracker-client:${{ github.sha }}
     build-server:
         runs-on: ubuntu-latest
         permissions:
@@ -42,9 +41,11 @@ jobs:
                 DOCKER_BUILDKIT: 0
               run: |
                 docker build \
-                  -f issuetracker-infrastructure/Docker/Dockerfile.server \
+                  -f infra/docker/Dockerfile.server \
                   -t ghcr.io/pavelkrasko/issuetracker-server:latest \
+                  -t ghcr.io/pavelkrasko/issuetracker-server:${{ github.sha }} \
                   .
-
             - name: Push Docker image
-              run: docker push ghcr.io/pavelkrasko/issuetracker-server:latest
+              run: |
+                docker push ghcr.io/pavelkrasko/issuetracker-server:latest
+                docker push ghcr.io/pavelkrasko/issuetracker-server:${{ github.sha }}

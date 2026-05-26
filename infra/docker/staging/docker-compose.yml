@@ -5,27 +5,19 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: ${SA_PASSWORD}
-    ports: 
-      - "1433:1433"
     volumes:
       - mssql-data:/var/opt/mssql
   server:
-    build:
-      context: ../../
-      dockerfile: issuetracker-infrastructure/Docker/Dockerfile.server
-    ports:
-      - "8080:8080"
+    image: ${REGISTRY}/server:${IMAGE_TAG}
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=IssueTrackerDB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
     depends_on:
       - mssql
   client:
-    build:
-      context: ../../
-      dockerfile: issuetracker-infrastructure/Docker/Dockerfile.client
+    image: ${REGISTRY}/client:${IMAGE_TAG}
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - server
 

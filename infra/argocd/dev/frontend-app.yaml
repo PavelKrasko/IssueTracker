@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: issuetracker-frontend-dev
+  namespace: argocd
+  labels:
+    environment: dev
+    component: frontend
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/PavelKrasko/IssueTracker.git
+    targetRevision: develop
+    path: infra/helm/frontend
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: issuetracker-dev
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

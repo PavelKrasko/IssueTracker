@@ -4,6 +4,8 @@ metadata:
   name: issuetracker-client
   labels:
     app: issuetracker-client
+    app.kubernetes.io/name: issuetracker-client
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -19,6 +21,7 @@ spec:
       containers:
         - name: client
           image: {{ .Values.image.registry }}/{{ .Values.image.client.name }}:{{ .Values.image.client.tag }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80

@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+    ports:
+      - "1433:1433"  
+    volumes:
+      - mssql-data:/var/opt/mssql
+  server:
+    build:
+      context: ../../../
+      dockerfile: infra/docker/Dockerfile.server
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=IssueTrackerDB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+    depends_on:
+      - mssql
+  client:
+    build:
+      context: ../../../
+      dockerfile: infra/docker/Dockerfile.client
+    ports:
+      - "3000:80"
+    depends_on: server
+
+volumes: mssql-data

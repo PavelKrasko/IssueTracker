@@ -1,0 +1,6 @@
+apiVersion: v2
+name: issuetracker-frontend
+description: IssueTracker Frontend - React + Nginx
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+    volumes:
+      - mssql-data:/var/opt/mssql
+    restart: unless-stopped
+  server:
+    image: ${REGISTRY}/server:${IMAGE_TAG}
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=IssueTrackerDB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+    restart: unless-stopped
+    depends_on:
+      - mssql
+  client:
+    image: ${REGISTRY}/client:${IMAGE_TAG}
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    depends_on:
+      - server
+
+volumes:
+  mssql-data:
