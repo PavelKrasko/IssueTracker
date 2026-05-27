@@ -7,8 +7,6 @@ image:
     tag: "1.0.1"
   pullPolicy: IfNotPresent
 
-domain: "kraskotracker.duckdns.org"
-
 backend:
   serviceName: issuetracker-server
   servicePort: 8080
