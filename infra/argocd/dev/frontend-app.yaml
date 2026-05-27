@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/PavelKrasko/IssueTracker.git
-    targetRevision: develop
+    targetRevision: main
     path: infra/helm/frontend
   destination:
     server: https://kubernetes.default.svc

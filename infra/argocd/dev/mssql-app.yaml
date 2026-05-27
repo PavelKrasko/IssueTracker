@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: issuetracker-backend-dev
+  name: issuetracker-mssql-dev
   namespace: argocd
   labels:
     environment: dev
-    component: backend
+    component: mssql
 spec:
   project: default
   source:
     repoURL: https://github.com/PavelKrasko/IssueTracker.git
     targetRevision: main
-    path: infra/helm/backend
+    path: infra/helm/mssql
   destination:
     server: https://kubernetes.default.svc
     namespace: issuetracker-dev
   syncPolicy:
     automated:
       selfHeal: true
-      prune: true
+      prune: false
     syncOptions:
       - CreateNamespace=true
