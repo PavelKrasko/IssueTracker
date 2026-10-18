@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: IssueTracker API
+  version: 1.0.0
+  description: |
+    REST API трекера задач. Авторизация — httpOnly-cookie `it_access` (JWT, 15 мин) и
+    `it_refresh` (30 дней, ротация). На 401 клиент вызывает `POST /auth/refresh` и повторяет запрос.
+    Ошибки: `{ "message": "...", "code": "VALIDATION", "fields": { "email": "..." } }`.
+    Роли в проекте: owner > admin > member > viewer.
+servers:
+  - url: /api
+tags:
+  - name: auth
+  - name: users
+  - name: projects
+  - name: members
+  - name: teams
+  - name: issues
+  - name: docs
+  - name: collaboration
+    description: Комментарии с @упоминаниями, наблюдатели, учёт времени
+  - name: planning
+    description: Спринты, burndown, версии
+  - name: notifications
+    description: Уведомления в приложении и Telegram
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация по email (ставит cookie сессии)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Register" } } } }
+      responses:
+        "201": { description: Пользователь, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { description: "EMAIL_TAKEN", content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Вход по email и паролю
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Login" } } } }
+      responses:
+        "200": { description: Пользователь, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+  /auth/refresh:
+    post: { tags: [auth], summary: Обновить сессию (ротация refresh-токена), responses: { "200": { description: Пользователь }, "401": { $ref: "#/components/responses/Error" } } }
+  /auth/logout:
+    post: { tags: [auth], summary: Выход, responses: { "204": { description: OK } } }
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Текущий пользователь
+      responses:
+        "200": { description: Пользователь, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+  /auth/providers:
+    get: { tags: [auth], summary: "Какие OAuth-провайдеры настроены: { google: bool, github: bool }", responses: { "200": { description: OK } } }
+  /auth/oauth/{provider}:
+    get:
+      tags: [auth]
+      summary: Начать вход через Google/GitHub (редирект к провайдеру)
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [google, github] } }
+        - { name: mode, in: query, schema: { type: string, enum: [login, link] }, description: "link — привязать к текущему аккаунту" }
+      responses: { "302": { description: Редирект } }
+  /auth/oauth/{provider}/callback:
+    get:
+      tags: [auth]
+      summary: Возврат от провайдера → редирект на фронтенд (/app/board или ?oauth_error=код)
+      parameters: [{ name: provider, in: path, required: true, schema: { type: string } }]
+      responses: { "302": { description: Редирект } }
+
+  /users/me:
+    patch:
+      tags: [users]
+      summary: Изменить профиль
+      requestBody: { content: { application/json: { schema: { type: object, properties: { name: { type: string }, jobTitle: { type: string }, about: { type: string } } } } } }
+      responses: { "200": { description: Пользователь, content: { application/json: { schema: { $ref: "#/components/schemas/User" } } } } }
+  /users/me/password:
+    post:
+      tags: [users]
+      summary: Сменить или задать пароль
+      requestBody: { content: { application/json: { schema: { type: object, properties: { current: { type: string }, next: { type: string } } } } } }
+      responses: { "204": { description: OK }, "400": { $ref: "#/components/responses/Error" } }
+  /users/me/providers/{provider}:
+    delete:
+      tags: [users]
+      summary: Отключить Google/GitHub (нельзя отключить последний способ входа)
+      parameters: [{ name: provider, in: path, required: true, schema: { type: string, enum: [google, github] } }]
+      responses: { "200": { description: Пользователь } }
+
+  /users/me/avatar:
+    post:
+      tags: [users]
+      summary: Загрузить фото профиля (PNG/JPG/GIF/WebP до 2 МБ)
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
+      responses: { "200": { description: Пользователь с новым avatarUrl }, "400": { description: Не изображение или больше 2 МБ } }
+    delete:
+      tags: [users]
+      summary: Удалить фото профиля (останутся инициалы)
+      responses: { "200": { description: Пользователь } }
+
+  /users/{userID}/avatar:
+    get:
+      tags: [users]
+      summary: Фото профиля пользователя (для вошедших)
+      parameters: [{ name: userID, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { "200": { description: Изображение }, "404": { description: Фото не загружено } }
+
+  /projects:
+    get:
+      tags: [projects]
+      summary: Мои проекты (с моей ролью)
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Project" } } } } } }
+    post:
+      tags: [projects]
+      summary: Создать проект (создатель — владелец)
+      requestBody: { content: { application/json: { schema: { type: object, required: [key, name], properties: { key: { type: string, example: IT }, name: { type: string }, description: { type: string } } } } } }
+      responses: { "201": { description: Проект }, "409": { description: KEY_TAKEN } }
+  /projects/{projectId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get: { tags: [projects], summary: Проект, responses: { "200": { description: OK } } }
+    patch: { tags: [projects], summary: "Изменить название/описание (admin+)", responses: { "200": { description: OK } } }
+    delete: { tags: [projects], summary: "Удалить проект со всеми данными и файлами (owner)", responses: { "204": { description: OK } } }
+
+  /projects/{projectId}/members:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get:
+      tags: [members]
+      summary: Участники и приглашения (приглашения видят admin+)
+      responses: { "200": { description: "{ members: Member[], invites: Invite[] }" } }
+    post:
+      tags: [members]
+      summary: Добавить по email (admin+). Не зарегистрирован — создаётся приглашение
+      requestBody: { content: { application/json: { schema: { type: object, properties: { email: { type: string }, role: { $ref: "#/components/schemas/Role" } } } } } }
+      responses: { "201": { description: '{ status: "added", member } | { status: "invited", invite }' } }
+  /projects/{projectId}/members/{userId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: userId, in: path, required: true, schema: { type: string }, description: "uuid или me (выйти из проекта)" }]
+    patch: { tags: [members], summary: "Сменить роль (admin+; admin назначает только owner)", responses: { "204": { description: OK } } }
+    delete: { tags: [members], summary: "Исключить (admin+) или выйти самому (me)", responses: { "204": { description: OK } } }
+  /projects/{projectId}/invites/{inviteId}:
+    delete: { tags: [members], summary: Отменить приглашение, parameters: [{ $ref: "#/components/parameters/projectId" }, { name: inviteId, in: path, required: true, schema: { type: string } }], responses: { "204": { description: OK } } }
+
+  /projects/{projectId}/teams:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get: { tags: [teams], summary: Команды с участниками, responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Team" } } } } } } }
+    post: { tags: [teams], summary: "Создать команду (admin+)", responses: { "201": { description: OK } } }
+  /projects/{projectId}/teams/{teamId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: teamId, in: path, required: true, schema: { type: string } }]
+    patch: { tags: [teams], summary: Изменить команду, responses: { "200": { description: OK } } }
+    delete: { tags: [teams], summary: Удалить команду (задачи станут «без команды»), responses: { "204": { description: OK } } }
+  /projects/{projectId}/teams/{teamId}/members:
+    post:
+      tags: [teams]
+      summary: Добавить участника проекта в команду
+      parameters: [{ $ref: "#/components/parameters/projectId" }, { name: teamId, in: path, required: true, schema: { type: string } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { userId: { type: string, format: uuid }, role: { type: string, example: QA } } } } } }
+      responses: { "200": { description: Команда } }
+  /projects/{projectId}/teams/{teamId}/members/{userId}:
+    delete: { tags: [teams], summary: Убрать из команды, parameters: [{ $ref: "#/components/parameters/projectId" }, { name: teamId, in: path, required: true, schema: { type: string } }, { name: userId, in: path, required: true, schema: { type: string } }], responses: { "200": { description: Команда } } }
+
+  /projects/{projectId}/issues:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get:
+      tags: [issues]
+      summary: Задачи проекта (с вложениями)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/Status" } }
+        - { name: assignee, in: query, schema: { type: string, format: uuid } }
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Issue" } } } } } }
+    post:
+      tags: [issues]
+      summary: "Создать задачу (member+). Ключ = КЛЮЧ_ПРОЕКТА-номер"
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/IssueInput" } } } }
+      responses: { "201": { description: Задача, content: { application/json: { schema: { $ref: "#/components/schemas/Issue" } } } }, "400": { $ref: "#/components/responses/Error" } }
+  /projects/{projectId}/issues/{issueId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }]
+    get: { tags: [issues], summary: Задача, responses: { "200": { description: OK } } }
+    patch:
+      tags: [issues]
+      summary: Частичное изменение. "" или null очищает необязательное поле
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/IssueInput" } } } }
+      responses: { "200": { description: Задача } }
+    delete: { tags: [issues], summary: Удалить задачу и её файлы, responses: { "204": { description: OK } } }
+  /projects/{projectId}/issues/{issueId}/events:
+    get: { tags: [issues], summary: "История изменений: [{ kind, changes: { field: { from, to } }, actorName, createdAt }]", parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }], responses: { "200": { description: OK } } }
+  /projects/{projectId}/issues/{issueId}/attachments:
+    post:
+      tags: [issues]
+      summary: "Прикрепить изображение: PNG/JPG/GIF/WebP до 5 МБ, до 10 на задачу → обновлённая задача"
+      parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }]
+      requestBody: { content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } } }
+      responses: { "201": { description: Задача } }
+  /projects/{projectId}/issues/{issueId}/attachments/{attachmentId}:
+    delete: { tags: [issues], summary: Удалить вложение → обновлённая задача, parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }, { name: attachmentId, in: path, required: true, schema: { type: string } }], responses: { "200": { description: Задача } } }
+  /projects/{projectId}/attachments/{attachmentId}/content:
+    get: { tags: [issues], summary: Файл вложения, parameters: [{ $ref: "#/components/parameters/projectId" }, { name: attachmentId, in: path, required: true, schema: { type: string } }], responses: { "200": { description: Изображение } } }
+
+  /projects/{projectId}/docs:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get: { tags: [docs], summary: Документы проекта, responses: { "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Doc" } } } } } } }
+    post:
+      tags: [docs]
+      summary: Загрузить файл (до 20 МБ)
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+                category: { $ref: "#/components/schemas/DocCategory" }
+                description: { type: string }
+                issueId: { type: string, format: uuid }
+      responses: { "201": { description: Документ } }
+  /projects/{projectId}/docs/links:
+    post: { tags: [docs], summary: "Ссылка на внешнюю документацию { name, url, category, description, issueId }", parameters: [{ $ref: "#/components/parameters/projectId" }], responses: { "201": { description: Документ } } }
+  /projects/{projectId}/docs/{docId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: docId, in: path, required: true, schema: { type: string } }]
+    patch: { tags: [docs], summary: Изменить документ, responses: { "200": { description: Документ } } }
+    delete: { tags: [docs], summary: Удалить документ, responses: { "204": { description: OK } } }
+  /projects/{projectId}/docs/{docId}/content:
+    get: { tags: [docs], summary: "Файл документа (?download=1 — скачать)", parameters: [{ $ref: "#/components/parameters/projectId" }, { name: docId, in: path, required: true, schema: { type: string } }], responses: { "200": { description: Файл } } }
+
+  /projects/{projectId}/issues/{issueId}/comments:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }]
+    get: { tags: [collaboration], summary: Комментарии задачи, responses: { "200": { description: "[Comment]" } } }
+    post:
+      tags: [collaboration]
+      summary: "Комментарий (member+). Упоминание: @[Имя](user:<uuid>) — упомянутым уходит уведомление, наблюдателям — «новый комментарий»"
+      requestBody: { content: { application/json: { schema: { type: object, required: [body], properties: { body: { type: string, maxLength: 10000 } } } } } }
+      responses: { "201": { description: Comment } }
+  /projects/{projectId}/comments/{commentId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: commentId, in: path, required: true, schema: { type: string, format: uuid } }]
+    patch: { tags: [collaboration], summary: Изменить свой комментарий, responses: { "200": { description: Comment }, "403": { description: Не ваш } } }
+    delete: { tags: [collaboration], summary: Удалить (автор или admin), responses: { "204": { description: OK } } }
+  /projects/{projectId}/issues/{issueId}/watchers/me:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }]
+    put: { tags: [collaboration], summary: Следить за задачей, responses: { "200": { description: "{ watchers: [uuid] }" } } }
+    delete: { tags: [collaboration], summary: Перестать следить, responses: { "200": { description: "{ watchers: [uuid] }" } } }
+  /projects/{projectId}/issues/{issueId}/worklogs:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/issueId" }]
+    get: { tags: [collaboration], summary: Журнал списанного времени, responses: { "200": { description: "{ worklogs, spentMinutes }" } } }
+    post:
+      tags: [collaboration]
+      summary: Списать время (member+)
+      requestBody: { content: { application/json: { schema: { type: object, required: [minutes], properties: { minutes: { type: integer, minimum: 1, maximum: 1440 }, date: { type: string, format: date }, note: { type: string, maxLength: 500 } } } } } }
+      responses: { "201": { description: "{ worklogs, spentMinutes }" } }
+  /projects/{projectId}/worklogs/{worklogId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: worklogId, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete: { tags: [collaboration], summary: Удалить запись (свою или любую для admin), responses: { "200": { description: "{ worklogs, spentMinutes }" } } }
+  /projects/{projectId}/time-report:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get:
+      tags: [collaboration]
+      summary: Списанное время по людям и дням (по умолчанию — 30 дней)
+      parameters: [{ name: from, in: query, schema: { type: string, format: date } }, { name: to, in: query, schema: { type: string, format: date } }]
+      responses: { "200": { description: "{ from, to, rows: [{ userId, date, minutes }] }" } }
+  /projects/{projectId}/sprints:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get: { tags: [planning], summary: "Спринты со счётчиками: issuesTotal/Done, pointsTotal/Done", responses: { "200": { description: "[Sprint]" } } }
+    post:
+      tags: [planning]
+      summary: Создать спринт (member+)
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/SprintInput" } } } }
+      responses: { "201": { description: Sprint } }
+  /projects/{projectId}/sprints/{sprintId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/sprintId" }]
+    patch: { tags: [planning], summary: Изменить спринт, requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/SprintInput" } } } }, responses: { "200": { description: Sprint } } }
+    delete: { tags: [planning], summary: Удалить (не активный) — задачи вернутся в бэклог, responses: { "204": { description: OK } } }
+  /projects/{projectId}/sprints/{sprintId}/start:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/sprintId" }]
+    post:
+      tags: [planning]
+      summary: Начать спринт (по умолчанию сегодня и +14 дней). Активный может быть только один
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/SprintInput" } } } }
+      responses: { "200": { description: Sprint }, "409": { description: SPRINT_ACTIVE } }
+  /projects/{projectId}/sprints/{sprintId}/complete:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/sprintId" }]
+    post:
+      tags: [planning]
+      summary: Завершить спринт; незакрытые задачи — в запланированный спринт moveTo или в бэклог (null)
+      requestBody: { content: { application/json: { schema: { type: object, properties: { moveTo: { type: string, format: uuid, nullable: true } } } } } }
+      responses: { "200": { description: "{ sprint, movedIssues }" } }
+  /projects/{projectId}/sprints/{sprintId}/burndown:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { $ref: "#/components/parameters/sprintId" }]
+    get: { tags: [planning], summary: "График сгорания: { unit: points|issues, total, days: [{ date, remaining|null, ideal }] }", responses: { "200": { description: OK } } }
+  /projects/{projectId}/versions:
+    parameters: [{ $ref: "#/components/parameters/projectId" }]
+    get: { tags: [planning], summary: Версии со счётчиками задач, responses: { "200": { description: "[Version]" } } }
+    post:
+      tags: [planning]
+      summary: Создать версию (member+)
+      requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/VersionInput" } } } }
+      responses: { "201": { description: Version }, "409": { description: VERSION_EXISTS } }
+  /projects/{projectId}/versions/{versionId}:
+    parameters: [{ $ref: "#/components/parameters/projectId" }, { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }]
+    patch: { tags: [planning], summary: "Изменить; released: true — выпустить", requestBody: { content: { application/json: { schema: { $ref: "#/components/schemas/VersionInput" } } } }, responses: { "200": { description: Version } } }
+    delete: { tags: [planning], summary: Удалить версию (у задач очистится поле), responses: { "204": { description: OK } } }
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: "Мои уведомления: kind = assigned | mentioned | commented | status"
+      parameters: [{ name: unread, in: query, schema: { type: string, enum: ["1"] } }, { name: limit, in: query, schema: { type: integer, maximum: 200 } }]
+      responses: { "200": { description: "{ items: [Notification], unread }" } }
+  /notifications/read:
+    post:
+      tags: [notifications]
+      summary: Отметить прочитанными
+      requestBody: { content: { application/json: { schema: { type: object, properties: { ids: { type: array, items: { type: integer } }, all: { type: boolean } } } } } }
+      responses: { "200": { description: "{ unread }" } }
+  /users/me/telegram:
+    get: { tags: [notifications], summary: "Статус Telegram: { available, botUsername, linked, enabled, username }", responses: { "200": { description: OK } } }
+    patch: { tags: [notifications], summary: "Вкл/выкл уведомления: { enabled }", responses: { "200": { description: OK } } }
+    delete: { tags: [notifications], summary: Отвязать Telegram, responses: { "200": { description: OK } } }
+  /users/me/telegram/link:
+    post: { tags: [notifications], summary: "Одноразовая ссылка t.me/<бот>?start=<код> (15 минут)", responses: { "200": { description: "{ url, expiresAt }" } } }
+components:
+  parameters:
+    projectId: { name: projectId, in: path, required: true, schema: { type: string, format: uuid } }
+    issueId: { name: issueId, in: path, required: true, schema: { type: string, format: uuid } }
+    sprintId: { name: sprintId, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Error: { description: Ошибка, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  schemas:
+    Error:
+      type: object
+      properties: { message: { type: string }, code: { type: string }, fields: { type: object, additionalProperties: { type: string } } }
+    Register:
+      type: object
+      required: [name, email, password]
+      properties: { name: { type: string }, email: { type: string }, password: { type: string, minLength: 8 } }
+    Login:
+      type: object
+      required: [email, password]
+      properties: { email: { type: string }, password: { type: string } }
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string }
+        jobTitle: { type: string }
+        about: { type: string }
+        avatarUrl: { type: string, nullable: true }
+        hasPassword: { type: boolean }
+        connected: { type: object, properties: { google: { type: boolean }, github: { type: boolean } } }
+        createdAt: { type: string, format: date-time }
+    Role: { type: string, enum: [owner, admin, member, viewer] }
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        key: { type: string, example: IT }
+        name: { type: string }
+        description: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        membersCount: { type: integer }
+        openIssues: { type: integer }
+    Team:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        members: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, email: { type: string }, role: { type: string } } } }
+    Status: { type: string, enum: [todo, in_progress, review, done] }
+    IssueInput:
+      type: object
+      properties:
+        title: { type: string, maxLength: 255 }
+        description: { type: string }
+        type: { type: string, enum: [task, bug, story] }
+        status: { $ref: "#/components/schemas/Status" }
+        priority: { type: string, enum: [highest, high, medium, low] }
+        assigneeId: { type: string, format: uuid, nullable: true }
+        teamId: { type: string, format: uuid, nullable: true }
+        startDate: { type: string, format: date, nullable: true }
+        dueDate: { type: string, format: date, nullable: true }
+        points: { type: integer, minimum: 0, maximum: 100, nullable: true }
+        parentId: { type: string, format: uuid, nullable: true, description: "Родительская задача того же проекта (цикл — 400)" }
+        sprintId: { type: string, format: uuid, nullable: true, description: "null — бэклог; в завершённый спринт нельзя" }
+        fixVersionId: { type: string, format: uuid, nullable: true }
+        estimateMinutes: { type: integer, minimum: 0, nullable: true }
+    Issue:
+      allOf:
+        - $ref: "#/components/schemas/IssueInput"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            key: { type: string, example: IT-12 }
+            number: { type: integer }
+            reporterId: { type: string, format: uuid, nullable: true }
+            completedAt: { type: string, format: date-time, nullable: true }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            attachments:
+              type: array
+              items: { type: object, properties: { id: { type: string }, name: { type: string }, size: { type: integer }, type: { type: string }, url: { type: string }, createdAt: { type: string } } }
+            spentMinutes: { type: integer }
+            watchers: { type: array, items: { type: string, format: uuid } }
+            commentsCount: { type: integer }
+    SprintInput:
+      type: object
+      properties: { name: { type: string, maxLength: 80 }, goal: { type: string }, startDate: { type: string, format: date, nullable: true }, endDate: { type: string, format: date, nullable: true } }
+    VersionInput:
+      type: object
+      properties: { name: { type: string, maxLength: 60 }, description: { type: string }, releaseDate: { type: string, format: date, nullable: true }, released: { type: boolean } }
+    DocCategory: { type: string, enum: [requirements, architecture, api, design, guides, other] }
+    Doc:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [file, link] }
+        name: { type: string }
+        size: { type: integer, nullable: true }
+        type: { type: string, nullable: true }
+        url: { type: string }
+        category: { $ref: "#/components/schemas/DocCategory" }
+        description: { type: string }
+        issueId: { type: string, format: uuid, nullable: true }
+        uploadedBy: { type: string, format: uuid, nullable: true }
+        createdAt: { type: string, format: date-time }

@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    --surface: 255 255 255;
+    --surface-sunken: 247 248 249;
+    --surface-raised: 255 255 255;
+    --surface-overlay: 255 255 255;
+    --surface-hovered: 240 241 242;
+    --surface-pressed: 221 222 225;
+
+    --neutral: 240 241 242;
+    --neutral-hover: 221 222 225;
+    --neutral-pressed: 199 201 206;
+
+    --ink: 41 42 46;
+    --ink-subtle: 80 82 88;
+    --ink-subtlest: 107 110 118;
+    --ink-disabled: 140 143 151;
+    --ink-inverse: 255 255 255;
+    --ink-brand: 24 104 219;
+
+    --brand: 24 104 219;
+    --brand-hover: 21 88 188;
+    --brand-pressed: 20 71 148;
+    --brand-subtle: 233 242 254;
+
+    --line: 221 222 225;
+    --line-bold: 125 129 138;
+    --line-focus: 70 136 236;
+
+    --danger: 201 55 44;
+    --danger-subtle: 255 236 235;
+    --danger-text: 174 46 36;
+    --success: 34 160 107;
+    --success-subtle: 220 255 241;
+    --success-text: 33 110 78;
+    --warning: 255 171 0;
+    --warning-subtle: 255 245 219;
+    --warning-text: 165 72 0;
+    --discovery: 130 112 219;
+    --discovery-subtle: 243 240 255;
+    --discovery-text: 94 77 178;
+
+    --chart-1: 42 120 214;
+    --chart-2: 235 104 52;
+    --chart-3: 98 80 214;
+    --chart-4: 27 175 122;
+
+    --blanket: rgb(5 12 31 / 0.46);
+    --shadow-raised: 0 1px 1px rgb(30 31 33 / 0.25), 0 0 1px rgb(30 31 33 / 0.31);
+    --shadow-overlay: 0 8px 12px rgb(30 31 33 / 0.15), 0 0 1px rgb(30 31 33 / 0.31);
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --surface: 31 31 33;
+    --surface-sunken: 24 25 26;
+    --surface-raised: 36 37 40;
+    --surface-overlay: 43 44 47;
+    --surface-hovered: 43 44 47;
+    --surface-pressed: 55 56 59;
+
+    --neutral: 48 50 54;
+    --neutral-hover: 58 60 64;
+    --neutral-pressed: 72 74 79;
+
+    --ink: 206 207 210;
+    --ink-subtle: 169 171 175;
+    --ink-subtlest: 150 153 158;
+    --ink-disabled: 104 107 112;
+    --ink-inverse: 31 31 33;
+    --ink-brand: 102 157 241;
+
+    --brand: 102 157 241;
+    --brand-hover: 143 184 246;
+    --brand-pressed: 168 200 248;
+    --brand-subtle: 28 43 66;
+
+    --line: 61 63 67;
+    --line-bold: 125 129 138;
+    --line-focus: 133 184 255;
+
+    --danger: 248 113 104;
+    --danger-subtle: 66 34 31;
+    --danger-text: 253 152 145;
+    --success: 42 187 127;
+    --success-subtle: 28 51 41;
+    --success-text: 126 226 184;
+    --warning: 251 200 40;
+    --warning-subtle: 51 46 27;
+    --warning-text: 251 210 76;
+    --discovery: 159 143 239;
+    --discovery-subtle: 43 39 63;
+    --discovery-text: 184 172 246;
+
+    --chart-1: 57 135 229;
+    --chart-2: 217 89 38;
+    --chart-3: 144 133 233;
+    --chart-4: 25 158 112;
+
+    --blanket: rgb(16 18 20 / 0.62);
+    --shadow-raised: 0 0 0 1px rgb(189 189 189 / 0.08), 0 1px 1px rgb(1 4 4 / 0.5);
+    --shadow-overlay: 0 0 0 1px rgb(189 189 189 / 0.12), 0 8px 12px rgb(1 4 4 / 0.36), 0 0 1px 1px rgb(1 4 4 / 0.5);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-surface font-sans text-sm text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
