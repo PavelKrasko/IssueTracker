@@ -54,7 +54,7 @@ export function CompleteSprintModal({ sprint, unfinished, plannedSprints, onClos
             hint={plannedSprints.length ? undefined : "Запланированных спринтов нет — задачи вернутся в бэклог."}
           />
         ) : (
-          <p className="text-sm text-success-text">Все задачи выполнены — отличная работа! 🎉</p>
+          <p className="text-sm text-success-text">Все задачи выполнены — отличная работа!</p>
         )}
       </div>
     </Modal>
