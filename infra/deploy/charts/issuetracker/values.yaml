@@ -1,0 +1,28 @@
+backend:
+  name: backend
+  replicas: 1
+  uid: 10001
+  port: 8080
+  image:
+    repository: ghcr.io/pavelkrasko/issuetracker-backend
+    tag: ""
+    pullPolicy: IfNotPresent
+  appUrl: http://localhost:8080
+  cookieSecure: false
+  existingSecret: issuetracker-backend
+  healthPath: /health
+  resources:
+    cpuRequest: 100m
+    memoryRequest: 128Mi
+    memoryLimit: 256Mi
+  persistence:
+    size: 5Gi
+postgres:
+  name: postgres
+  image: postgres:16-alpine
+  existingSecret: issuetracker-postgres
+  storage: 5Gi
+  resources:
+    cpuRequest: 100m
+    memoryRequest: 256Mi
+    memoryLimit: 512Mi

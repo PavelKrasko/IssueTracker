@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.backend.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: issuetracker
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.backend.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.backend.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/part-of: issuetracker
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.backend.uid }}
+        runAsGroup: {{ .Values.backend.uid }}
+        fsGroup: {{ .Values.backend.uid }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ .Values.backend.name }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy}}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.port }}
+          env:
+            - name: HTTP_ADDR
+              value: ":{{ .Values.backend.port }}"
+            - name: STORAGE_DIR
+              value: /data/uploads
+            - name: APP_URL
+              value: {{ .Values.backend.appUrl | quote }}
+            - name: COOKIE_SECURE
+              value:  {{ .Values.backend.cookieSecure | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.backend.existingSecret }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.backend.healthPath }}
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.healthPath }}
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.healthPath }}
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: {{ .Values.backend.resources.cpuRequest }}
+              memory: {{ .Values.backend.resources.memoryRequest }}
+            limits:
+              memory: {{ .Values.backend.resources.memoryLimit }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: 
+              drop: ["ALL"]
+          volumeMounts:
+            - name: uploads
+              mountPath: /data/uploads
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-{{ .Values.backend.name }}-uploads
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

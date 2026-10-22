@@ -1,0 +1,16 @@
+apiVersion: v2
+name: issuetracker
+description: A helm chart for kubernetes for issuetracker
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.29.0-0"
+home: https://github.com/PavelKrasko/IssueTracker
+sources: 
+  - https://github.com/PavelKrasko/IssueTracker
+maintainers:
+  - name: PavelKrasko
+keywords:
+  - issue-tracker
+  - go
+  - react
