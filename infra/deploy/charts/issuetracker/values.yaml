@@ -26,3 +26,17 @@ postgres:
     cpuRequest: 100m
     memoryRequest: 256Mi
     memoryLimit: 512Mi
+frontend:
+  name: frontend
+  replicas: 1
+  uid: 101
+  image:
+    repository: ghcr.io/pavelkrasko/issuetracker-frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+  port: 8080
+  healthPath: /healthz
+  resources:
+    cpuRequest: 50m
+    memoryRequest: 32Mi
+    memoryLimit: 64Mi

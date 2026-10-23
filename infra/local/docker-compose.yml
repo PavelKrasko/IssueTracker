@@ -41,9 +41,8 @@ services:
         max-size: "10m"
         max-file: "3"
   backend:
-    image: issuetracker_backend_local
-    build:
-      context: ../../backend
+    image: ghcr.io/pavelkrasko/issuetracker-backend:prod
+    pull_policy: always
     container_name: issuetracker_backend_local
     depends_on:
       db:
@@ -77,9 +76,8 @@ services:
         max-size: "10m"
         max-file: "3"
   frontend:
-    image: issuetracker_frontend_local
-    build:
-      context: ../../frontend
+    image: ghcr.io/pavelkrasko/issuetracker-frontend:prod
+    pull_policy: always
     container_name: issuetracker_frontend_local
     networks:
       - internal_net_local
