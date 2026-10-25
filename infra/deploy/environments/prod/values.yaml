@@ -1,9 +1,8 @@
 backend:
   image:
-    tag: prod-0000000
+    tag: prod-42801fc
   appUrl: https://example.com
   cookieSecure: true
-
 frontend:
   image:
-    tag: prod-0000000
+    tag: prod-42801fc
