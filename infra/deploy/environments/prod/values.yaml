@@ -1,0 +1,9 @@
+backend:
+  image:
+    tag: prod-0000000
+  appUrl: https://example.com
+  cookieSecure: true
+
+frontend:
+  image:
+    tag: prod-0000000

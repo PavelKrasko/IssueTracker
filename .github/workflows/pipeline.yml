@@ -7,6 +7,9 @@ on:
 env:
   REGISTRY: ghcr.io
   OWNER: pavelkrasko
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build-frontend-prod:
     if: github.ref == 'refs/heads/main'
@@ -204,3 +207,55 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.IMAGE_NAME }}:dev-${{ steps.vars.outputs.sha_short }}
           cache-from: type=gha,scope=backend-dev
+  update-dev-values:
+    if:  github.ref == 'refs/heads/develop'
+    needs: [build-frontend-dev, build-backend-dev]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: set short sha
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: update image tags
+        env:
+          TAG: dev-${{ steps.vars.outputs.sha_short }}
+          FILE: infra/deploy/environments/dev/values.yaml
+        run: yq -i '.backend.image.tag = strenv(TAG) | .frontend.image.tag = strenv(TAG)' "$FILE"
+      - name: commit and push
+        run: | 
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add infra/deploy/environments/dev/values.yaml
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(dev): bump image tags to ${{ steps.vars.outputs.sha_short }} [skip ci]"
+          git pull --rebase
+          git push
+  update-prod-values:
+    if: github.ref == 'refs/heads/main'
+    needs: [build-frontend-prod, build-backend-prod]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: set short sha
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: update image tags
+        env:
+          TAG: prod-${{ steps.vars.outputs.sha_short }}
+          FILE: infra/deploy/environments/prod/values.yaml
+        run: yq -i '.backend.image.tag = strenv(TAG) | .frontend.image.tag = strenv(TAG)' "$FILE"
+      - name: commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add infra/deploy/environments/prod/values.yaml
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(prod): bump image tags to ${{ steps.vars.outputs.sha_short }} [skip ci]"
+          git pull --rebase
+          git push  
