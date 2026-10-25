@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: issuetracker-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/PavelKrasko/IssueTracker
+    targetRevision: main
+    path: infra/deploy/charts/issuetracker
+    helm:
+      releaseName: it
+      valueFiles:
+        - ../../environments/prod/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: issuetracker-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
