@@ -1,8 +1,8 @@
 backend:
   image:
-    tag: dev-afe05af
+    tag: dev-e0df3a9
   appUrl: https://dev.example.com
   cookieSecure: true
 frontend:
   image:
-    tag: dev-afe05af
+    tag: dev-e0df3a9
