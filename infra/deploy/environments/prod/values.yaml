@@ -1,8 +1,8 @@
 backend:
   image:
-    tag: prod-b9b6e6d
+    tag: prod-4e3b632
   appUrl: https://example.com
   cookieSecure: true
 frontend:
   image:
-    tag: prod-b9b6e6d
+    tag: prod-4e3b632
