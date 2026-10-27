@@ -1,9 +1,9 @@
 vaultPath: issuetracker/dev
 backend:
   image:
-    tag: dev-e0df3a9
+    tag: dev-4afe317
   appUrl: https://dev.example.com
   cookieSecure: true
 frontend:
   image:
-    tag: dev-e0df3a9
+    tag: dev-4afe317
