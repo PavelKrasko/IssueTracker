@@ -1,3 +1,4 @@
+vaultPath: issuetracker/prod
 backend:
   image:
     tag: prod-42801fc

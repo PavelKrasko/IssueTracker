@@ -1,3 +1,4 @@
+vaultPath: issuetracker/dev
 backend:
   image:
     tag: dev-e0df3a9
