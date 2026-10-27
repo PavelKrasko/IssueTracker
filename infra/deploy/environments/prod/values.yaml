@@ -1,9 +1,9 @@
 vaultPath: issuetracker/prod
 backend:
   image:
-    tag: prod-4e3b632
+    tag: prod-c94e854
   appUrl: https://example.com
   cookieSecure: true
 frontend:
   image:
-    tag: prod-4e3b632
+    tag: prod-c94e854
