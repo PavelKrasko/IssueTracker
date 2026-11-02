@@ -1,0 +1,25 @@
+- name: install k3s
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | \
+      INSTALL_K3S_VERSION="{{ k3s_version }}" \
+      INSTALL_K3S_EXEC="{{ k3s_args }}" \
+      sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: wait for node to be ready
+  ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=180s
+  changed_when: false
+
+- name: read kubeconfig from server
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: kubeconfig_raw
+
+- name: save kubeconfig on my computer
+  ansible.builtin.copy:
+    content: "{{ kubeconfig_raw.content | b64decode }}"
+    dest: "{{ kubeconfig_local_path }}"
+    mode: "0600"
+  delegate_to: localhost
+  become: false

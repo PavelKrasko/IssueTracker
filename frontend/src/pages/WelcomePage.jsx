@@ -178,7 +178,7 @@ export default function WelcomePage() {
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-xs text-ink-subtlest">© {new Date().getFullYear()} IssueTracker</div>
+        <div className="mx-auto max-w-6xl px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center text-xs text-ink-subtlest">© {new Date().getFullYear()} IssueTracker</div>
       </footer>
     </div>
   );

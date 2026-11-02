@@ -1,0 +1,6 @@
+- name: prepare server and install k3s
+  hosts: k3s
+  become: true
+  roles:
+    - base
+    - k3s
