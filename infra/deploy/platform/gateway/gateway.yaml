@@ -1,0 +1,60 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: main
+  namespace: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: web
+      protocol: HTTP
+      port: 8000
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-dev
+      protocol: HTTPS
+      port: 8443
+      hostname: dev.<домен>
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: dev-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-prod
+      protocol: HTTPS
+      port: 8443
+      hostname: <домен>
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: prod-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-argocd
+      protocol: HTTPS
+      port: 8443
+      hostname: argocd.example.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: argocd-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-vault
+      protocol: HTTPS
+      port: 8443
+      hostname: vault.example.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: vault-tls
+      allowedRoutes:
+        namespaces:
+          from: All

@@ -1,0 +1,5 @@
+deploy_user: deploy
+deploy_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+k3s_version: v1.34.x+k3s1
+k3s_args: "--disable=traefik --secrets-encryption --write-kubeconfig-mode=0600"
+kubeconfig_local_path: "{{ playbook_dir }}/../../.kube/vps1.yaml"
