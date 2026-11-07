@@ -1,17 +1,57 @@
 grafana:
-  adminPassword: change-me
+  adminPassword: PavelKrasko
   resources:
     requests:
       memory: 128Mi
     limits:
       memory: 256Mi
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring.svc:3100
+      access: proxy
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: custom
+          orgId: 1
+          folder: custom
+          type: file
+          disableDeletioin: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/custom
+  dashboards:
+    custom: 
+      node-exporter-full:
+        gnetId: 1860
+        revision: 46
+        datasource: Prometheus
+      cadvisor:
+        gnetId: 14282
+        revision: 1
+        datasource: Prometheus
+      postgres:
+        gnetId: 9628
+        revision: 8
+        datasource: Prometheus
 prometheus:
   prometheusSpec:
     retention: 7d
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
     resources:
       requests:
         memory: 400Mi
       limits:
         memory: 1Gi
+nodeExporter:
+  enabled: true
+
+kubelet:
+  serviceMonitor:
+    cAdvisor: true
+
 alertmanager:
   enabled: false
